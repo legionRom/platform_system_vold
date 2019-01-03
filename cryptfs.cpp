@@ -1269,6 +1269,21 @@ static void add_sector_size_param(std::vector<std::string>* extra_params_vec) {
     }
 }
 
+// Only adds parameters if the property is set.
+static void add_sector_size_param(std::vector<std::string>* extra_params_vec) {
+    constexpr char DM_CRYPT_SECTOR_SIZE[] = "ro.crypto.fde_sector_size";
+    char sector_size[PROPERTY_VALUE_MAX];
+
+    if (property_get(DM_CRYPT_SECTOR_SIZE, sector_size, "") > 0) {
+        std::string param = StringPrintf("sector_size:%s", sector_size);
+        extra_params_vec->push_back(std::move(param));
+
+        // With this option, IVs will match the sector numbering, instead
+        // of being hard-coded to being based on 512-byte sectors.
+        extra_params_vec->emplace_back("iv_large_sectors");
+    }
+}
+
 static int create_crypto_blk_dev(struct crypt_mnt_ftr* crypt_ftr, const unsigned char* master_key,
                                  const char* real_blk_name, char* crypto_blk_name, const char* name,
                                  uint32_t flags) {
